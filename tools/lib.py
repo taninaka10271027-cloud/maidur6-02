@@ -23,6 +23,14 @@ import os
 FIT = False  # 倍率100%固定（列幅はA4印刷幅内に設計済み）
 
 
+_HW = {ord(c): ord(c) - 0xFEE0 for c in '０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ．，－／：＋％＝'}
+
+
+def hw(s):
+    """全角英数字・記号を半角に（読みやすさ・折返し防止）"""
+    return s.translate(_HW)
+
+
 def col_px(w):
     """Excel列幅(文字数)→ピクセル（既定フォント最大桁幅7px）"""
     return int(w * 7 + 5)
@@ -86,7 +94,7 @@ class Sheet:
         m.bottom = 0.5
         m.header = 0.25
         m.footer = 0.25
-        ws.oddFooter.center.text = '&P / &N'
+        ws.oddFooter.center.text = '' if first else '&P / &N'
         ws.oddFooter.center.size = 9
         ws.oddFooter.center.font = MIN
         if footer_title:
@@ -111,6 +119,9 @@ class Sheet:
 
     def put(self, cells, height=None, min_h=None, keep=False):
         """cells: list of dict(t=text, c=col(1-based), s=span, ...style)"""
+        for d in cells:
+            if isinstance(d.get('t'), str) and d.get('size', BASE) < 16:
+                d['t'] = hw(d['t'])
         h = 0
         for d in cells:
             size = d.get('size', BASE)
